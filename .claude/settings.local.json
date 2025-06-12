@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker-compose up:*)",
+      "Bash(docker logs:*)",
+      "Bash(curl:*)",
+      "Bash(docker-compose down:*)",
+      "Bash(-H 'Content-Type: text/turtle' )",
+      "Bash(-T fuseki/ontologies/example-ontology.ttl)",
+      "Bash(-H 'Content-Type: text/turtle' )",
+      "Bash(-v)",
+      "Bash(chmod:*)"
+    ],
+    "deny": []
+  }
+}

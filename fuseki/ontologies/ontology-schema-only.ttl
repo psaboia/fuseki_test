@@ -1,0 +1,60 @@
+@prefix : <http://example.org/ontology#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology Declaration
+<http://example.org/ontology> rdf:type owl:Ontology ;
+    rdfs:label "Example Ontology"@en ;
+    rdfs:comment "A simple example ontology for demonstration purposes"@en .
+
+# Classes
+:Person rdf:type owl:Class ;
+    rdfs:label "Person"@en ;
+    rdfs:comment "Represents a person"@en .
+
+:Organization rdf:type owl:Class ;
+    rdfs:label "Organization"@en ;
+    rdfs:comment "Represents an organization"@en .
+
+:Project rdf:type owl:Class ;
+    rdfs:label "Project"@en ;
+    rdfs:comment "Represents a project"@en .
+
+# Object Properties
+:worksFor rdf:type owl:ObjectProperty ;
+    rdfs:label "works for"@en ;
+    rdfs:domain :Person ;
+    rdfs:range :Organization .
+
+:manages rdf:type owl:ObjectProperty ;
+    rdfs:label "manages"@en ;
+    rdfs:domain :Person ;
+    rdfs:range :Project .
+
+:fundedBy rdf:type owl:ObjectProperty ;
+    rdfs:label "funded by"@en ;
+    rdfs:domain :Project ;
+    rdfs:range :Organization .
+
+# Data Properties
+:hasName rdf:type owl:DatatypeProperty ;
+    rdfs:label "has name"@en ;
+    rdfs:domain :Person ;
+    rdfs:range xsd:string .
+
+:hasEmail rdf:type owl:DatatypeProperty ;
+    rdfs:label "has email"@en ;
+    rdfs:domain :Person ;
+    rdfs:range xsd:string .
+
+:hasStartDate rdf:type owl:DatatypeProperty ;
+    rdfs:label "has start date"@en ;
+    rdfs:domain :Project ;
+    rdfs:range xsd:date .
+
+:hasBudget rdf:type owl:DatatypeProperty ;
+    rdfs:label "has budget"@en ;
+    rdfs:domain :Project ;
+    rdfs:range xsd:decimal .

@@ -1,0 +1,13 @@
+services:
+  fuseki:
+    image: stain/jena-fuseki:latest
+    container_name: fuseki-server
+    ports:
+      - "3030:3030"
+    environment:
+      - ADMIN_PASSWORD=admin
+    volumes:
+      - ./fuseki/data:/fuseki/databases
+      - ./fuseki/ontologies:/staging
+      - ./fuseki/config/config.ttl:/fuseki/config.ttl
+    command: ["/jena-fuseki/fuseki-server", "--config=/fuseki/config.ttl", "--port=3030", "--verbose"]
