@@ -1,0 +1,20 @@
+# Fuseki database files (binary, auto-generated)
+fuseki/data/
+
+# Backup files (timestamped exports)
+fuseki/backups/
+
+# Claude artifacts
+claude-todos/
+claude_task_*.json
+.claude/settings.local.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo

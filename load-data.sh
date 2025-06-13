@@ -1,45 +1,24 @@
 #!/bin/bash
 
-# Load data using SPARQL Update
-curl -X POST 'http://localhost:3030/knowledge-graph/update' \
-  -H 'Content-Type: application/sparql-update' \
-  --data-binary @- << 'EOF'
-PREFIX : <http://example.org/ontology#>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX owl: <http://www.w3.org/2002/07/owl#>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+# Load instance data from TTL file into named graph
+echo "Loading instance data from fuseki/ontologies/data.ttl..."
 
-INSERT DATA {
-  # Example Individuals
-  :john_doe rdf:type :Person ;
-    :hasName "John Doe" ;
-    :hasEmail "john.doe@example.com" ;
-    :worksFor :acme_corp ;
-    :manages :project_alpha .
+# Check if data file exists
+if [ ! -f "fuseki/ontologies/data.ttl" ]; then
+    echo "Error: fuseki/ontologies/data.ttl not found!"
+    exit 1
+fi
 
-  :jane_smith rdf:type :Person ;
-    :hasName "Jane Smith" ;
-    :hasEmail "jane.smith@example.com" ;
-    :worksFor :tech_innovations ;
-    :manages :project_beta .
+# Load data from TTL file directly into named graph
+echo "Uploading data.ttl to <http://example.org/data> graph..."
+curl -X POST 'http://localhost:3030/knowledge-base/data?graph=http://example.org/data' \
+  -u admin:admin \
+  -H 'Content-Type: text/turtle' \
+  --data-binary @fuseki/ontologies/data.ttl
 
-  :acme_corp rdf:type :Organization ;
-    rdfs:label "ACME Corporation" .
-
-  :tech_innovations rdf:type :Organization ;
-    rdfs:label "Tech Innovations Inc." .
-
-  :project_alpha rdf:type :Project ;
-    rdfs:label "Project Alpha" ;
-    :hasStartDate "2024-01-15"^^xsd:date ;
-    :hasBudget "250000.00"^^xsd:decimal ;
-    :fundedBy :acme_corp .
-
-  :project_beta rdf:type :Project ;
-    rdfs:label "Project Beta" ;
-    :hasStartDate "2024-03-01"^^xsd:date ;
-    :hasBudget "500000.00"^^xsd:decimal ;
-    :fundedBy :tech_innovations .
-}
-EOF
+if [ $? -eq 0 ]; then
+    echo -e "\n✅ Instance data loaded successfully from TTL file!"
+else
+    echo -e "\n❌ Failed to load instance data!"
+    exit 1
+fi

@@ -1,0 +1,35 @@
+@prefix : <http://example.org/ontology#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Example Individuals
+:john_doe rdf:type :Person ;
+  :hasName "John Doe" ;
+  :hasEmail "john.doe@example.com" ;
+  :worksFor :acme_corp ;
+  :manages :project_alpha .
+
+:jane_smith rdf:type :Person ;
+  :hasName "Jane Smith" ;
+  :hasEmail "jane.smith@example.com" ;
+  :worksFor :tech_innovations ;
+  :manages :project_beta .
+
+:acme_corp rdf:type :Organization ;
+  rdfs:label "ACME Corporation" .
+
+:tech_innovations rdf:type :Organization ;
+  rdfs:label "Tech Innovations Inc." .
+
+:project_alpha rdf:type :Project ;
+  rdfs:label "Project Alpha" ;
+  :hasStartDate "2024-01-15"^^xsd:date ;
+  :hasBudget "250000.00"^^xsd:decimal ;
+  :fundedBy :acme_corp .
+
+:project_beta rdf:type :Project ;
+  rdfs:label "Project Beta" ;
+  :hasStartDate "2024-03-01"^^xsd:date ;
+  :hasBudget "500000.00"^^xsd:decimal ;
+  :fundedBy :tech_innovations .
