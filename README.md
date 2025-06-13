@@ -1,6 +1,14 @@
-# Fuseki Docker Setup for Ontology & Knowledge Graph Publishing
+# Fuseki Docker Setup with Named Graphs
 
-This setup provides Apache Jena Fuseki server running in Docker for publishing and querying ontologies and knowledge graphs.
+Apache Jena Fuseki server running in Docker using **named graphs** for semantic web data management. Features single endpoint with logical separation between ontology schema and instance data.
+
+## Key Features
+
+- **Single endpoint**: `http://localhost:3030/knowledge-base/sparql`
+- **Named graphs**: Separate schema (`<http://example.org/ontology>`) and data (`<http://example.org/data>`)
+- **Cross-graph queries**: Query schema and data together in single SPARQL query
+- **File-based source of truth**: TTL files sync with binary database
+- **Export/import capabilities**: Backup and restore functionality
 
 ## Quick Start
 
@@ -9,12 +17,63 @@ This setup provides Apache Jena Fuseki server running in Docker for publishing a
 docker-compose up -d
 ```
 
-2. Access Fuseki UI:
+2. Load ontology schema into named graph:
+```bash
+./load-ontology.sh
+```
+
+3. Load instance data into named graph:
+```bash
+./load-data.sh
+```
+
+4. Access Fuseki UI:
    - URL: http://localhost:3030
    - Username: admin
    - Password: admin
 
-3. Your dataset endpoint: http://localhost:3030/knowledge-graph
+5. Run cross-graph query demonstrations:
+```bash
+./demo-cross-graph-queries.sh
+```
+
+## Cross-Graph Query Demonstrations
+
+The `demo-cross-graph-queries.sh` script showcases the **key advantage of named graphs**: the ability to query across both schema and data in a single SPARQL query. This demonstrates capabilities that would be impossible with separate dual endpoints.
+
+### What the Demo Shows:
+
+1. **Instances with Class Definitions**: Query people from the data graph and get their class labels from the ontology graph
+2. **Instance Counts by Type**: Count how many instances exist for each class type using schema information
+3. **Property Domain/Range Validation**: Show property usage with full domain/range information from the schema
+4. **Named Graph Listing**: Display all available named graphs in the dataset
+
+### Example Cross-Graph Query:
+```sparql
+PREFIX : <http://example.org/ontology#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?person ?name ?classLabel WHERE {
+  GRAPH <http://example.org/data> {
+    ?person a :Person ; :hasName ?name
+  }
+  GRAPH <http://example.org/ontology> {
+    :Person rdfs:label ?classLabel
+  }
+}
+```
+
+This query retrieves person instances from the data graph while simultaneously fetching class labels from the ontology graph - impossible with dual endpoints but trivial with named graphs!
+
+## Data Management
+
+For detailed workflows on editing data, loading changes, backups, and best practices, see [DATA_MANAGEMENT.md](DATA_MANAGEMENT.md).
+
+**Quick commands:**
+- Edit: `vim fuseki/ontologies/ontology.ttl` or `vim fuseki/ontologies/data.ttl`  
+- Reload: `./reset-database.sh`
+- Test: `./test-system.sh`
+- Backup: `./export-data.sh`
 
 ## Loading Data
 
@@ -38,65 +97,77 @@ cd /fuseki/ontologies
 /jena-fuseki/bin/tdb2.tdbloader --loc=/fuseki/databases/knowledge-graph example-ontology.ttl
 ```
 
-## Querying Your Knowledge Graph
+## Querying with Named Graphs
 
-You now have **two separate SPARQL endpoints**:
-- **Knowledge Graph**: `http://localhost:3030/knowledge-graph/sparql` (for your data instances)
-- **Ontology**: `http://localhost:3030/ontology/sparql` (for your schema/ontology)
+**Single SPARQL endpoint**: `http://localhost:3030/knowledge-base/sparql`
 
-### Programmatic SPARQL Queries
+The power of named graphs is that you can query across both schema and data, or target specific graphs.
 
-#### Method 1: POST with SPARQL query in body (Recommended)
+### Cross-Graph Queries (The Key Advantage!)
+
+#### Query instances with their class definitions:
 ```bash
-curl -X POST 'http://localhost:3030/knowledge-graph/sparql' \
-  -H 'Content-Type: application/sparql-query' \
-  -H 'Accept: application/json' \
-  -d 'SELECT ?s ?p ?o WHERE { ?s ?p ?o } LIMIT 5'
-```
-
-#### Method 2: GET with query parameter
-```bash
-curl 'http://localhost:3030/knowledge-graph/sparql?query=SELECT%20*%20WHERE%20%7B%20%3Fs%20%3Fp%20%3Fo%20%7D%20LIMIT%205' \
-  -H 'Accept: application/json'
-```
-
-#### Method 3: URL-encoded POST
-```bash
-curl -X POST 'http://localhost:3030/knowledge-graph/sparql' \
-  -H 'Content-Type: application/x-www-form-urlencoded' \
-  -H 'Accept: application/json' \
-  -d 'query=SELECT * WHERE { ?s ?p ?o } LIMIT 5'
-```
-
-### Example Queries
-
-#### Query Knowledge Graph Data
-```bash
-# Get all persons from knowledge graph
-curl -X POST 'http://localhost:3030/knowledge-graph/sparql' \
+curl -X POST 'http://localhost:3030/knowledge-base/sparql' \
   -H 'Content-Type: application/sparql-query' \
   -H 'Accept: application/json' \
   -d 'PREFIX : <http://example.org/ontology#>
-SELECT ?person ?name ?email
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?person ?name ?classLabel
 WHERE {
-  ?person a :Person ;
-          :hasName ?name ;
-          :hasEmail ?email .
+  GRAPH <http://example.org/data> {
+    ?person a :Person ;
+            :hasName ?name .
+  }
+  GRAPH <http://example.org/ontology> {
+    :Person rdfs:label ?classLabel .
+  }
 }'
 ```
 
-#### Query Ontology Schema
+### Graph-Specific Queries
+
+#### Query only data instances:
 ```bash
-# Get all classes from ontology
-curl -X POST 'http://localhost:3030/ontology/sparql' \
+curl -X POST 'http://localhost:3030/knowledge-base/sparql' \
   -H 'Content-Type: application/sparql-query' \
   -H 'Accept: application/json' \
-  -d 'SELECT ?class ?label
+  -d 'PREFIX : <http://example.org/ontology#>
+
+SELECT ?person ?name ?email
 WHERE {
-  ?class a <http://www.w3.org/2002/07/owl#Class> .
-  OPTIONAL { ?class <http://www.w3.org/2000/01/rdf-schema#label> ?label }
+  GRAPH <http://example.org/data> {
+    ?person a :Person ;
+            :hasName ?name ;
+            :hasEmail ?email .
+  }
 }'
 ```
+
+#### Query only schema definitions:
+```bash
+curl -X POST 'http://localhost:3030/knowledge-base/sparql' \
+  -H 'Content-Type: application/sparql-query' \
+  -H 'Accept: application/json' \
+  -d 'PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?class ?label
+WHERE {
+  GRAPH <http://example.org/ontology> {
+    ?class a owl:Class ;
+           rdfs:label ?label .
+  }
+}'
+```
+
+### Alternative Query Methods
+
+#### Method 1: POST with SPARQL query in body (Recommended)
+#### Method 2: GET with query parameter  
+#### Method 3: URL-encoded POST
+
+All methods work the same, just replace the endpoint with `/knowledge-base/sparql`
 
 ### Browser Access
 - **Fuseki UI**: http://localhost:3030 (web interface for interactive queries)
@@ -121,17 +192,19 @@ All queries return JSON by default:
 }
 ```
 
-## Directory Structure
+## Project Structure
 ```
 fuseki_test/
-├── docker-compose.yml       # Docker Compose configuration
+├── docker-compose.yml          # Docker Compose configuration
 ├── fuseki/
-│   ├── config/
-│   │   └── config.ttl      # Fuseki configuration
-│   ├── data/               # Database storage (created automatically)
-│   └── ontologies/         # Your ontology files
-│       └── example-ontology.ttl
-└── README.md
+│   ├── config/config.ttl       # Fuseki single-endpoint configuration
+│   ├── data/knowledge-base/    # Binary TDB2 database (auto-generated)
+│   ├── ontologies/             # Source TTL files (edit these)
+│   │   ├── ontology.ttl        # Schema/classes/properties
+│   │   └── data.ttl            # Instances/individuals
+│   └── backups/                # Timestamped exports
+├── *.sh                        # Data management scripts
+└── DATA_MANAGEMENT.md          # Detailed workflow guide
 ```
 
 ## Stopping Fuseki
